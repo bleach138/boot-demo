@@ -1,0 +1,28 @@
+http://localhost:9090/boot/login
+{"userName": "test", "password": "test"}
+
+
+http://localhost:9090/boot/order/submitShoppingCard
+{
+  "goodsId":"1",
+  "goodsName":"test",
+  "goodsNum":1,
+  "useTime":"2017-1-1"
+}
+
+
+  http://localhost:9090/boot/order/submitOrder
+{
+"idList":[11]
+}
+
+
+{
+'class': 'qos',
+'total': 0,#Kbit
+'100': 0,#Kbit
+'200': 0,#Kbit
+'300': 0,#Kbit
+'400': 0,#Kbit
+'999': 0,#Kbit
+}

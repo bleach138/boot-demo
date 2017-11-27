@@ -1,0 +1,57 @@
+
+httpReq.header("X-Zc-Sub-Domain-Id", req.getContext().getSubDomainId());
+
+        httpReq.header("X-Zc-User-Id", String.valueOf(req.getContext().getUserId()));
+
+
+        httpReq.header("X-Zc-Trace-Start-Time", req.getContext().getTraceStartTime());
+
+
+
+
+
+
+
+        httpReq.header("X-Zc-Timestamp", req.getContext().getTimestamp());
+
+
+
+
+
+
+
+        httpReq.header("X-Zc-Nonce", req.getContext().getNonce());
+
+
+
+
+
+
+
+        httpReq.header("X-Zc-Version", String.valueOf(req.getContext().getMethodVersion()));
+
+
+
+        httpReq.header("X-Zc-Device-Os", req.getContext().getOs());
+
+
+
+        httpReq.header("X-Zc-Phone-Id", req.getContext().getPhoneId());
+
+
+
+        httpReq.header("X-Zc-Operation-Type", req.getContext().getOpType());
+
+
+
+        httpReq.header("X-Zc-Device-Os", req.getContext().getOs());
+
+
+
+        httpReq.header("X-Zc-Operation-Type", req.getContext().getOpType());
+
+
+
+        httpReq.header("X-Zc-Client-Addr", req.getContext().getClientAddr());
+
+        httpReq.header("X-Zc-Client-Identity", "UDS");

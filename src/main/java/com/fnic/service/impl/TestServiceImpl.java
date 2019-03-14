@@ -40,9 +40,6 @@ public class TestServiceImpl implements TestService {
 
     private int processCount = 0;
 
-    @Resource
-    private KafkaTemplate kafkaTemplate;
-
     //缓存
 //    @Override
 //    public Map<String, Object> miaosha(Map<String, Object> param) throws Exception {
@@ -170,43 +167,6 @@ public class TestServiceImpl implements TestService {
         //logger.debug("@@@@@@@@@@@@" + processCount);
         return rspMap;
     }
-
-    @Override
-    public Map<String, Object> miaoshaMQ(final Map<String, Object> param) throws Exception {
-
-        final Map<String,Object> rspMap = Maps.newHashMap();
-
-        ListenableFuture<SendResult<String, Object>> future = kafkaTemplate.send(new ProducerRecord("miaosha",param));
-        future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>() {
-
-            @Override
-            public void onSuccess(SendResult<String, Object> result) {
-                handleSuccess(rspMap);
-            }
-
-            @Override
-            public void onFailure(Throwable ex) {
-                handleFailure(rspMap, ex);
-            }
-
-        });
-        return rspMap;
-    }
-
-    private Map<String,Object> handleSuccess(Map<String, Object> param) {
-
-        Map<String,Object> rspMap = Maps.newHashMap();
-        rspMap.put("rspCode","0000");
-        return rspMap;
-    }
-
-    private Map<String,Object> handleFailure(Map<String, Object> param,Throwable ex) {
-
-        Map<String,Object> rspMap = Maps.newHashMap();
-        rspMap.put("rspCode","9999");
-        return rspMap;
-    }
-
 
     //无缓存
 //    @Override

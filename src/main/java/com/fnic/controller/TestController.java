@@ -52,7 +52,7 @@ public class TestController extends BaseController {
             rspMap = testServcie.miaoshaMQ(param);
         } catch (Exception e) {
             logger.error("@@@@@@@@@@@@@@@");
-            logger.error(e.getMessage());
+            e.printStackTrace();
         }
         return rspMap;
     }

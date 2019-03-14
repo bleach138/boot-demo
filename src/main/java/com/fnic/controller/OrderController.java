@@ -1,7 +1,7 @@
 package com.fnic.controller;
 
-import com.fnic.mybatis.dao.*;
-import com.fnic.mybatis.model.*;
+import com.fnic.mybatis.iot.dao.*;
+import com.fnic.mybatis.iot.model.*;
 import com.fnic.service.OrderService;
 import com.fnic.sysframe.utils.UserUtil;
 import com.google.common.collect.Lists;

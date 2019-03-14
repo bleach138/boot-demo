@@ -16,6 +16,7 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -31,16 +32,16 @@ public class RemoteClientServiceImpl implements RemoteClientService {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Value("${remote.url}")
+    //@Value("${remote.url}")
     private String url;
 
-    @Value("${remote.connTimeOut}")
+    //@Value("${remote.connTimeOut}")
     private int connTimeOut;
 
-    @Value("${remote.invokeTimeOut}")
+    //@Value("${remote.invokeTimeOut}")
     private int invokeTimeOut;
 
-    @Value("${remote.charset}")
+    //@Value("${remote.charset}")
     private String charset;
 
     @Override

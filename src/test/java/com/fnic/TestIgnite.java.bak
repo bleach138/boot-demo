@@ -1,0 +1,158 @@
+package com.fnic;
+
+import org.apache.ignite.Ignite;
+import org.apache.ignite.IgniteCache;
+import org.apache.ignite.IgniteCluster;
+import org.apache.ignite.Ignition;
+import org.apache.ignite.cluster.ClusterGroup;
+import org.apache.ignite.configuration.CacheConfiguration;
+import org.apache.ignite.lang.IgniteCallable;
+import org.apache.ignite.transactions.Transaction;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.concurrent.locks.Lock;
+
+/**
+ * Created by hjhuang on 2017/6/7.
+ */
+public class TestIgnite {
+
+    @Test
+    public void testIgnite() {
+        try (Ignite ignite = Ignition.start("ignite/ignite.xml")) {
+
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Test
+    public void testIgniteCompute() {
+        try (Ignite ignite = Ignition.start("ignite/ignite.xml")) {
+            System.out.println("start success '");
+            Collection<IgniteCallable<Integer>> calls = new ArrayList<>();
+            // Iterate through all the words in the sentence and create Callable jobs.
+            for (final String word : "Count characters using callable".split(" "))
+                calls.add(word::length);
+            // Execute collection of Callables on the grid.
+            Collection<Integer> res = ignite.compute().call(calls);
+            // Add up all the results.
+            int sum = res.stream().mapToInt(Integer::intValue).sum();
+            System.out.println("Total number of characters is '" + sum + "'.");
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Test
+    public void test() {
+//        for(final String word : "Count characters using callable".split(" "))
+//           out(word :: length);
+
+        Arrays.asList( "a", "b", "d" ).forEach(e -> System.out.println( e ) );
+
+        Arrays.asList( "a", "b", "d" ).forEach( ( String e ) -> System.out.println( e ) );
+    }
+
+    @Test
+    public void testDataGrid() {
+        try( Ignite ignite = Ignition.start("ignite/ignite.xml") ) {
+//            IgniteCache<Integer,String> cache = ignite.getOrCreateCache("myCache");
+//
+//            for(int i=0; i<10 ; i++)
+//                cache.put(i,Integer.toString(i));
+//
+//            for(int i=0; i<10; i++)
+//                System.out.println("key: " + i + ", val=" + cache.get(i));
+
+            IgniteCache<String,Integer> cache = ignite.getOrCreateCache("nycache");
+
+            Integer oldVal = cache.getAndPutIfAbsent("Hello", 1);
+            try(Transaction tx = ignite.transactions().txStart()) {
+                Integer hello = cache.get("Hello");
+
+                if(hello == 1)
+                    cache.put("Hello",11);
+
+                cache.put("World",22);
+
+                tx.commit();
+            }
+
+//            Lock lock = cache.lock("Hello");
+//            lock.lock();
+//
+//            try {
+//                cache.put("Hello",33);
+//                cache.put("World",44);
+//            }finally {
+//                lock.unlock();
+//            }
+        }
+    }
+
+    @Test
+    public void testCluster() {
+
+        final Ignite ignite = Ignition.start("ignite/ignite.xml");
+
+//        final Ignite ignite =Ignition.ignite();
+
+        IgniteCluster cluster = ignite.cluster();
+
+        //获取本地节点
+//        ClusterNode localNode = ignite.cluster().localNode();
+        System.out.println(" cluster " + cluster);
+        ClusterGroup clusterGroup = cluster.forCacheNodes("myCache");
+
+        IgniteCache<Integer,String> cache = ignite.getOrCreateCache("myCache");
+
+            for(int i=0; i<10 ; i++)
+                cache.put(i,Integer.toString(i));
+
+            for(int i=0; i<10; i++)
+                System.out.println("key: " + i + ", val=" + cache.get(i));
+
+    }
+
+    @Test
+    public void testDistributeGrid() {
+        try( Ignite ignite = Ignition.start("ignite/ignite.xml") ) {
+
+            CacheConfiguration cfg = new CacheConfiguration("myCache");
+
+            IgniteCache<Integer,String> cache = ignite.getOrCreateCache(cfg);
+
+            for (int i = 0; i < 10; i++)
+                cache.put(i, Integer.toString(i));
+            for (int i = 0; i < 10; i++)
+                System.out.println("Got [key=" + i + ", val=" + cache.get(i) + ']');
+        }
+    }
+
+    @Test
+    public void testEntryProcessor() {
+        try(Ignite ignite = Ignition.start("ignite/ignite.xml")) {
+//            IgniteCache<String,Integer> cache =  ignite.cache("igCache");
+            IgniteCache<String,Integer> cache =  ignite.getOrCreateCache("mycache6");
+
+            for(int i=0;i<10;i++) {
+                cache.invoke("mykey",(entry,args) -> {
+                    Integer val = entry.getValue();
+                    entry.setValue(val == null ? 1 : val + 1 );
+                    return null;
+                });
+            }
+
+            System.out.println(cache.get("mykey"));
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+}

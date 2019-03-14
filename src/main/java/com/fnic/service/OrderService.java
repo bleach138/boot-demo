@@ -12,4 +12,14 @@ public interface OrderService  {
 
     @Transactional
     public boolean submitOrder(List<Integer> idList) throws Exception;
+
+    public Map<String,Object> test() throws Exception;
+
+    public void testPress() throws Exception;
+
+    public void testMqttPress(int num);
+
+    public void testMqttConnect(int num);
+
+    public void testMqttPressAttr(int num);
 }

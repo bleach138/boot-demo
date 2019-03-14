@@ -1,10 +1,7 @@
 package com.fnic.sysframe.utils;
 
-import com.fnic.mybatis.dao.SequenceMapper;
+import com.fnic.mybatis.iot.dao.SequenceMapper;
 import com.fnic.sysframe.service.SpringBeanService;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 /**
  * Created by hjhuang on 2017/5/19.

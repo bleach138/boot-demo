@@ -1,7 +1,11 @@
 package com.fnic.service.impl;
 
-import com.fnic.mybatis.dao.*;
-import com.fnic.mybatis.model.*;
+import com.fnic.mybatis.iot.dao.*;
+import com.fnic.mybatis.iot.dao.EventMapper;
+import com.fnic.mybatis.iot.model.Event;
+import com.fnic.mybatis.iot.model.*;
+import com.fnic.mybatis.thingsboard.dao.CustomerMapper;
+import com.fnic.mybatis.thingsboard.model.Customer;
 import com.fnic.service.OrderService;
 import com.fnic.service.RemoteClientService;
 import com.fnic.sysframe.security.SysUser;
@@ -10,14 +14,26 @@ import com.fnic.sysframe.utils.SequenceUtil;
 import com.fnic.sysframe.utils.UserUtil;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonObject;
-import org.apache.commons.lang.StringUtils;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by hjhuang on 2017/5/19.
@@ -69,6 +85,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Value("${qos.otherFlow}")
     private int otherFlow;
+
+    @Autowired
+    private EventMapper eventMapper;
+
+    @Autowired
+    private CustomerMapper customerMapper;
 
     public boolean submitShoppingCart(Map<String,Object> inputParam) throws Exception {
 
@@ -304,4 +326,354 @@ public class OrderServiceImpl implements OrderService {
 
         }
     }
+
+    @Override
+    @Transactional(transactionManager = "xatx", propagation = Propagation.REQUIRED, rollbackFor = { java.lang.RuntimeException.class })
+    public Map<String, Object> test() throws Exception {
+
+        Map<String,Object> rsp = Maps.newHashMap();
+        rsp.put("rspCode","0000");
+
+        Customer customer = new Customer();
+        customer.setId(DateUtil.getNowTimeStr());
+        customer.setTenantId("123");
+        customer.setTitle("TEST");
+        customerMapper.insert(customer);
+
+        Event event = new Event();
+        event.setId("1111");
+        event.setBody("@@@@@@@@@@@@@@");
+        event.setEntityId("123");
+        event.setEntityType("TEST");
+        event.setEventType("TEST");
+        event.setEventUid("123456");
+        event.setTenantId("123");
+
+        eventMapper.insert(event);
+
+        return rsp;
+    }
+
+    @Override
+    public void testPress() throws Exception {
+        final String host = "192.168.33.168";
+        //final String host = "127.0.0.1";
+        final int port = 8082;
+
+        for(int i=0;i<1000;i++) {
+            String address = "123456" + String.format("%05d",i + 9009);
+            ByteBuf buf = Unpooled.buffer(21);
+
+            buf.writeByte(0x21);
+            buf.writeByte(0x43);
+
+            buf.writeByte(0x65);
+            buf.writeByte(0x87);
+
+            buf.writeBytes(address.getBytes());
+
+            buf.writeByte(0x00);
+            buf.writeByte(0xC0);
+            buf.writeByte(0xA8);
+            buf.writeByte(0x01);
+            buf.writeByte(0x74);
+            buf.writeByte(0x00);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    Socket sc = new Socket(host,port);
+                    OutputStream out = sc.getOutputStream();
+                    out.write(buf.array());
+
+                    ExecutorService rspExecutor = Executors.newFixedThreadPool(10);
+
+                    while(true)
+                    {
+                        try {
+                            getElevatorRsponse2(sc,rspExecutor);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+    }
+
+    @Override
+    public void testMqttPress(int num) {
+        final String host = "tcp://192.168.33.168:1884";
+        ExecutorService executor = Executors.newFixedThreadPool(num);
+
+        for(int i=1;i<num;i++) {
+            final int j = i;
+            executor.execute( () -> {
+//                String token = "123456" + String.format("%05d",j);
+                long value = j + 12345600001l;
+                String token = String.valueOf(value);
+                MqttConnectOptions options = new MqttConnectOptions();
+                // MQTT的连接设置
+                options = new MqttConnectOptions();
+                // 设置是否清空session,这里如果设置为false表示服务器会保留客户端的连接记录，设置为true表示每次连接到服务器都以新的身份连接
+                options.setCleanSession(false);
+                options.setKeepAliveInterval(600);
+                // 设置连接的用户名
+                options.setUserName(token);
+                String clientId = MqttAsyncClient.generateClientId();
+                MqttAsyncClient client = null;
+                try {
+                    client = new MqttAsyncClient(host, clientId);
+
+                    MqttMessage message = new MqttMessage();
+                    String content = "{\"key1\":" +  Math.random() + "}";
+                    message.setPayload(content.getBytes());
+                    client.connect(options).waitForCompletion();
+
+                    while(true) {
+                        client.publish("v1/devices/me/telemetry",  message.getPayload(),1,false);
+                        Thread.sleep(6000);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            //12345600001
+
+            //client.disconnect();
+        }
+    }
+
+    @Override
+    public void testMqttConnect(int num) {
+
+        final String host = "tcp://192.168.33.168:1884";
+
+        ExecutorService executor = Executors.newFixedThreadPool(num);
+
+        int i = 1;
+        while(true) {
+            final int j = i;
+            if(i<= num) {
+                executor.execute(() -> {
+                    String token = "123456" + String.format("%05d", j);
+                    MqttConnectOptions options = new MqttConnectOptions();
+                    // MQTT的连接设置
+                    options = new MqttConnectOptions();
+                    // 设置是否清空session,这里如果设置为false表示服务器会保留客户端的连接记录，设置为true表示每次连接到服务器都以新的身份连接
+                    options.setCleanSession(false);
+                    // 设置连接的用户名
+                    options.setUserName(token);
+                    String clientId = MqttAsyncClient.generateClientId();
+                    MqttAsyncClient client = null;
+                    try {
+                        client = new MqttAsyncClient(host, clientId);
+
+                        MqttMessage message = new MqttMessage();
+                        String content = "{\"key1\":" + Math.random() + "}";
+                        message.setPayload(content.getBytes());
+                        client.connect(options).waitForCompletion();
+
+//                    while (true) {
+//                        client.publish("v1/devices/me/telemetry", message);
+//                        Thread.sleep(6000);
+//                    }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+                i++;
+                System.out.println(i);
+            }
+        }
+    }
+
+    @Override
+    public void testMqttPressAttr(int num) {
+        //final String host = "tcp://192.168.33.168:1884";
+        final String host = "tcp://112.64.32.192:9001";
+        //final String host = "tcp://218.98.16.76:1883";
+        //final String host = "tcp://172.30.207.60:1883";
+        //final String host = "tcp://127.0.0.1:9001";
+        //final String host = "tcp://192.168.1.9:9001";
+        ExecutorService executor = Executors.newFixedThreadPool(num);
+
+        for(int i=1;i<num;i++) {
+            final int j = i;
+            executor.execute( () -> {
+                long value = j + 12345600001l;
+                String token = String.valueOf(value);
+                MqttConnectOptions options = new MqttConnectOptions();
+                // MQTT的连接设置
+                options = new MqttConnectOptions();
+                // 设置是否清空session,这里如果设置为false表示服务器会保留客户端的连接记录，设置为true表示每次连接到服务器都以新的身份连接
+                options.setCleanSession(false);
+                options.setKeepAliveInterval(600);
+                // 设置连接的用户名
+                options.setUserName(token);
+                String clientId = MqttAsyncClient.generateClientId();
+                MqttAsyncClient client = null;
+                try {
+                    client = new MqttAsyncClient(host, clientId);
+
+                    MqttMessage message = new MqttMessage();
+                    String content = "{\"key3\":" +  Math.random() + "}";
+                    message.setPayload(content.getBytes());
+                    client.connect(options).waitForCompletion();
+
+                    while(true) {
+                        client.publish("v1/devices/me/attributes", message.getPayload(),1,false);
+                        Thread.sleep(6000);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+    }
+
+    private void getElevatorRsponse2(Socket socket) throws Exception {
+
+        // while(true) {
+        InputStream inputStream = socket.getInputStream();
+
+        byte[] body = new byte[1024];
+        int length = inputStream.read(body);
+
+        // 失败案例
+        // OpenJDK 64-Bit Server VM warning: Attempt to deallocate stack guard pages failed.OpenJDK 64-Bit Server VM warning: Attempt to deallocate stack guard pages failed.
+        //OpenJDK 64-Bit Server VM warning: INFO: os::commit_memory(0x00007fb330f11000, 12288, 0) failed; error='无法分配内存' (errno=12)
+        //[thread 140407598028544 also had an error]
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        for(int i=1;i<10;i++) {
+            final int address = i;
+            executorService.execute( () -> {
+                        try {
+                            OutputStream out = socket.getOutputStream();
+                            ByteBuf bBuf = Unpooled.buffer(12);
+                            bBuf.writeByte(transToByte(0xfd));
+                            bBuf.writeByte(transToByte( 0xee));
+
+                            bBuf.writeByte(transToByte( 0x06));
+
+                            bBuf.writeByte(transToByte( 0x44));
+                            bBuf.writeByte(transToByte( 0x5e));
+
+                            bBuf.writeByte(transToByte( address));
+                            bBuf.writeByte(transToByte( 0x00));
+
+                            bBuf.writeByte(transToByte( address));
+                            bBuf.writeByte(transToByte( 0x01));
+
+                            bBuf.writeByte(transToByte( 0x00));
+                            bBuf.writeByte((int) (1+Math.random()*(10-1+1)));
+
+                            bBuf.writeByte(transToByte( 0x8d));
+
+                            out.write(bBuf.array());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+            );
+
+        }
+    }
+
+    private void getElevatorRsponse2(Socket socket,ExecutorService rspExecutor) throws Exception {
+
+        // while(true) {
+        InputStream inputStream = socket.getInputStream();
+        if(inputStream != null) {
+            byte[] body = new byte[10];
+            int length = inputStream.read(body);
+
+            rspExecutor.execute(() -> {
+                try {
+                    final int address = body[5] & 0xff;
+
+                    OutputStream out = socket.getOutputStream();
+                    ByteBuf bBuf = Unpooled.buffer(12);
+                    bBuf.writeByte(transToByte(0xfd));
+                    bBuf.writeByte(transToByte(0xee));
+
+                    bBuf.writeByte(transToByte(0x06));
+
+                    bBuf.writeByte(transToByte(0x44));
+                    bBuf.writeByte(transToByte(0x5e));
+
+                    bBuf.writeByte(transToByte(address));
+                    bBuf.writeByte(transToByte(0x00));
+
+                    bBuf.writeByte(transToByte(address));
+                    bBuf.writeByte(transToByte(0x01));
+
+                    bBuf.writeByte(transToByte(0x00));
+                    bBuf.writeByte((int) (1 + Math.random() * (10 - 1 + 1)));
+
+                    bBuf.writeByte(transToByte(0x8d));
+
+                    out.write(bBuf.array());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+    }
+
+      /*
+        会出现并发问题，同一个设备ID，同一个KEY，同一个时间戳，导致报错
+        Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "ts_kv_latest_unq_key"
+        Caused by: org.hibernate.HibernateException: More than one row with the given identifier was found: TsKvCompositeKey(entityType=DEVICE, entityId=1e8598ae3c975f0933219a5a4cf21f9, key=IOValue, ts=1543389046324), for class: org.thingsboard.server.dao.model.sql.TsKvEntity
+
+       */
+//    private void getElevatorRsponse2(Socket socket,ExecutorService rspExecutor) throws Exception {
+//
+//        // while(true) {
+//        InputStream inputStream = socket.getInputStream();
+//
+//        byte[] body = new byte[1024];
+//        int length = inputStream.read(body);
+//        for(int i=1;i<10;i++) {
+//            final int address = i;
+//            rspExecutor.execute( () -> {
+//                        try {
+//                            OutputStream out = socket.getOutputStream();
+//                            ByteBuf bBuf = Unpooled.buffer(12);
+//                            bBuf.writeByte(transToByte(0xfd));
+//                            bBuf.writeByte(transToByte( 0xee));
+//
+//                            bBuf.writeByte(transToByte( 0x06));
+//
+//                            bBuf.writeByte(transToByte( 0x44));
+//                            bBuf.writeByte(transToByte( 0x5e));
+//
+//                            bBuf.writeByte(transToByte( address));
+//                            bBuf.writeByte(transToByte( 0x00));
+//
+//                            bBuf.writeByte(transToByte( address));
+//                            bBuf.writeByte(transToByte( 0x01));
+//
+//                            bBuf.writeByte(transToByte( 0x00));
+//                            bBuf.writeByte((int) (1+Math.random()*(10-1+1)));
+//
+//                            bBuf.writeByte(transToByte( 0x8d));
+//
+//                            out.write(bBuf.array());
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//            );
+//
+//        }
+//    }
+
+    private byte transToByte(int i) {
+        return (byte) i;
+    }
+
+
 }

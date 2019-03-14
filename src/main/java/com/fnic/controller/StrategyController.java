@@ -1,8 +1,8 @@
 package com.fnic.controller;
 
-import com.fnic.mybatis.dao.TQosMapper;
-import com.fnic.mybatis.model.TQos;
-import com.fnic.mybatis.model.TQosExample;
+import com.fnic.mybatis.iot.dao.TQosMapper;
+import com.fnic.mybatis.iot.model.TQos;
+import com.fnic.mybatis.iot.model.TQosExample;
 import com.fnic.sysframe.utils.UserUtil;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;

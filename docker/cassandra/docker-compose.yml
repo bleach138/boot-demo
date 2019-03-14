@@ -1,0 +1,10 @@
+version: '3.1'
+
+
+services:
+  cassandra:
+    restart: always
+    image: "cassandra:3.11.3"
+    ports:
+    - "9042"
+    volumes:

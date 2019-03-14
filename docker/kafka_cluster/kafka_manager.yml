@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  kafka-manager:
+    container_name: kafka-manager
+    image: sheepkiller/kafka-manager
+    restart: always
+    ports:
+      - 9000:9000
+    environment:
+      KM_VERSION: 1.3.3.18
+      ZK_HOSTS: zk1:2181,zk2:2181,zk3:2181

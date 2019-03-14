@@ -1,0 +1,25 @@
+package spark;
+
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.SparkSession;
+import org.junit.Test;
+
+/**
+ * Created by hjhuang on 2018/8/29.
+ */
+public class TestSpark {
+
+    @Test
+    public void test() {
+        String logFile = "pom.xml"; // Should be some file on your system
+        SparkSession spark = SparkSession.builder().appName("Simple Application").getOrCreate();
+        Dataset<String> logData = spark.read().textFile(logFile).cache();
+
+        long numAs = logData.filter(s -> s.contains("a")).count();
+        long numBs = logData.filter(s -> s.contains("b")).count();
+
+        System.out.println("Lines with a: " + numAs + ", lines with b: " + numBs);
+
+        spark.stop();
+    }
+}

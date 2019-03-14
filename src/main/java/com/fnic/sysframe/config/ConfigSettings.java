@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
  * Created by hjhuang on 2017/1/19.
  */
 @Component
-@ConfigurationProperties(prefix = "book",locations = "classpath:application.properties")
+@ConfigurationProperties(prefix = "book")
 public class ConfigSettings {
 
     private String name;

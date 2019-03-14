@@ -2,46 +2,97 @@ spring:
   profiles:
     active: dev
   datasource:
-        name: test
-        #url: jdbc:mysql://192.168.58.11:3306/test
-        url: jdbc:mysql://192.168.33.167:3306/test?useUnicode=true&characterEncoding=utf8
-        username: root
-        password: 1111
+    url: jdbc:postgresql://192.168.33.167:5432/tbdj
+    username: postgres
+    password: fnic2018
 
-        # 使用druid数据源
-        type: com.alibaba.druid.pool.DruidDataSource
-        driver-class-name: com.mysql.jdbc.Driver
-        filters: stat
-        maxActive: 20
-        initialSize: 1
-        maxWait: 60000
-        minIdle: 1
-        timeBetweenEvictionRunsMillis: 60000
-        minEvictableIdleTimeMillis: 300000
-        validationQuery: select 'x'
-        testWhileIdle: true
-        testOnBorrow: false
-        testOnReturn: false
-        poolPreparedStatements: true
-        maxOpenPreparedStatements: 20
+    # 使用druid数据源
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: org.postgresql.Driver
+    filters: stat
+    maxActive: 20
+    initialSize: 1
+    maxWait: 60000
+    minIdle: 1
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: select 'x'
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    maxOpenPreparedStatements: 20
   mvc:
     view:
       suffix: .html
-#  resources:
-#    static-locations:
 
-mybatis:
-  type-aliases-package: com.example.mybatis
+#logging:
+#  file: log/log.log
+#  level.org.springframework.web: debug
+#  level.org.springframework.security: debug
+#  level.org.mybatis.spring.boot: debug
+#  level.com.alibaba.druid: debug
+#  level.java.sql.Statement: debug
+#  level.java.sql.PreparedStatement: debug
+#  level.java.sql.ResultSet: debug
+#  level.com.fnic: debug
 
-logging:
-  file: log/log.log
-  level.org.springframework.web: debug
-  level.org.springframework.security: debug
-  level.org.mybatis.spring.boot: debug
-  level.com.alibaba.druid: debug
-  level.java.sql.Statement: debug
-  level.java.sql.PreparedStatement: debug
-  level.java.sql.ResultSet: debug
-  level.com.fnic: debug
+cache:
+   type: "${CACHE_TYPE:redis}"
+
+redis:
+  # standalone or cluster
+  connection:
+    type: standalone
+    host: "${REDIS_HOST:192.168.33.167}"
+    port: "${REDIS_PORT:6379}"
+    db: "${REDIS_DB:0}"
+    password: "${REDIS_PASSWORD:}"
+  pool:
+    #连接池的最大数据库连接数。设为0表示无限制,如果是jedis 2.4以后用redis.maxTotal
+    #maxActive: 300
+    #控制一个pool可分配多少个jedis实例,用来替换上面的redis.maxActive,如果是jedis 2.4以后用该属性
+    maxTotal: 500
+    # 最大空闲数
+    maxIdle: 20
+    #最大建立连接等待时间。如果超过此时间将接到异常。设为-1表示无限制。
+    maxWaitMillis: 1000
+    #连接的最小空闲时间 默认1800000毫秒(30分钟)
+    minEvictableIdleTimeMillis: 300000
+    #每次释放连接的最大数目,默认3
+    numTestsPerEvictionRun: 1024
+    #逐出扫描的时间间隔(毫秒) 如果为负数,则不运行逐出线程, 默认-1
+    timeBetweenEvictionRunsMillis: 30000
+    #是否在从池中取出连接前进行检验,如果检验失败,则从池中去除连接并尝试取出另一个
+    testOnBorrow: true
+    #在空闲时检查有效性, 默认false
+    testWhileIdle: true
+
+#server:
+#  tomcat:
+#    uri-encoding: utf-8
+#    connection-timeout: 10000
+#    acceptor-thread-count: 4
+#    min-spare-threads: 20 # 最小活跃连接数
+#    max-spare-threads: 2000 # 最大活跃连接数
+#    accept-count: 200  #最大排队数
+#    max-connections: 20000  #最大连接数
+#    max-threads: 2000  #最大线程数
+
+
+#spring:
+#  redis:
+#    database: 0      # Redis数据库索引（默认为0）
+#    host: localhost  # Redis服务器地址
+#    port: 6379       # Redis服务器连接端口
+#    password:        # Redis服务器连接密码（默认为空）
+#    timeout: 0       # 连接超时时间（毫秒）
+#    pool:
+#      max-active: 8  # 连接池最大连接数（使用负值表示没有限制）
+#      max-idle: 8    # 连接池中的最大空闲连接
+#      max-wait: -1   # 连接池最大阻塞等待时间（使用负值表示没有限制）
+#      min-idle: 0    # 连接池中的最小空闲连接12345678910111213
+
+
 
 

@@ -1,8 +1,8 @@
 package com.fnic.sysframe.security;
 
-import com.fnic.mybatis.dao.TUserMapper;
-import com.fnic.mybatis.model.TUser;
-import com.fnic.mybatis.model.TUserExample;
+import com.fnic.mybatis.iot.dao.TUserMapper;
+import com.fnic.mybatis.iot.model.TUser;
+import com.fnic.mybatis.iot.model.TUserExample;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

@@ -1,0 +1,66 @@
+version: '3.1'
+
+services:
+  mongo_config1:
+    #restart: always
+    image: mongo
+    container_name: mongo_config1
+    volumes:
+      - /home/mongo/cs/rs1:/data/db
+    command: mongod  --configsvr --replSet csrs
+  mongo_config2:
+    #restart: always
+    image: mongo
+    container_name: mongo_config2
+    volumes:
+      - /home/mongo/cs/rs2:/data/db
+    command: mongod  --configsvr --replSet csrs
+  mongo_config3:
+    #restart: always
+    image: mongo
+    container_name: mongo_config3
+    volumes:
+      - /home/mongo/cs/rs3:/data/db
+    command: mongod  --configsvr --replSet csrs
+  mongo_sh1rs1:
+    #restart: always
+    image: mongo
+    container_name: mongo_sh1rs1
+    volumes:
+      - /home/mongo/sh1/rs1:/data/db
+    command: mongod  --noauth  --shardsvr --replSet shrs1
+  mongo_sh1rs2:
+    #restart: always
+    image: mongo
+    container_name: mongo_sh1rs2
+    volumes:
+      - /home/mongo/sh1/rs2:/data/db
+    command: mongod --noauth --shardsvr --replSet shrs1
+  mongo_sh2rs1:
+    #restart: always
+    image: mongo
+    container_name: mongo_sh2rs1
+    volumes:
+      - /home/mongo/sh2/rs1:/data/db
+    command: mongod --noauth --shardsvr --replSet shrs2
+  mongo_sh2rs2:
+    #restart: always
+    image: mongo
+    container_name: mongo_sh2rs2
+    volumes:
+    - /home/mongo/sh2/rs2:/data/db
+    command: mongod --noauth --shardsvr --replSet shrs2
+  mongo_sh3rs1:
+    #restart: always
+    image: mongo
+    container_name: mongo_sh3rs1
+    volumes:
+    - /home/mongo/sh3/rs1:/data/db
+    command: mongod  --noauth  --shardsvr --replSet shrs3
+  mongo_router:
+    #restart: always
+    image: mongo
+    container_name: mongo_router
+    ports:
+      - 27017:27017
+    command: mongos --noauth  --configdb csrs/mongo_config1:27019,mongo_config2:27019,mongo_config3:27019 --bind_ip 0.0.0.0

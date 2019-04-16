@@ -4,9 +4,11 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -18,10 +20,14 @@ public class TestDeji {
     public void testElevator() throws Exception {
         //socket = new Socket("192.168.33.168",8082);
         socket = new Socket("127.0.0.1",8082);
+        //socket = new Socket("192.168.14.33",8082);
         OutputStream out = socket.getOutputStream();
 
         //String token = "12345609009";
-        String token = "FNDJ8900001";
+        String token = "12348900002";
+        //String token = "12348900003";
+        //String token = "12348900010";
+
         ByteBuf buf = Unpooled.buffer(25);
 //        buf.writeByte(0x21);
 //        buf.writeByte(0x43);
@@ -117,25 +123,35 @@ public class TestDeji {
     private void getElevatorRsponse(Socket socket) throws Exception {
 
         // while(true) {
-        int j =0;
-        while(true) {
+//        int j =0;
+//        while(true) {
             InputStream inputStream = socket.getInputStream();
 
             byte[] body = new byte[1024];
             int length = inputStream.read(body);
-            System.out.println("############: "  + j++);
+            //System.out.println("############: "  + j++);
+            StringBuffer strBuf = new StringBuffer();
             for(int i=0;i<length;i++) {
-
-                System.out.println("@@@@@@@@@@: " + Integer.toHexString(body[i] & 0xff ));
+                int num = body[i] & 0xff;
+                if(num<16) {
+                    strBuf.append("0" + Integer.toHexString(num));
+                }else {
+                    strBuf.append(Integer.toHexString(num));
+                }
             }
-        }
+            System.out.println("@@@@@@@@@@: " + strBuf.toString());
+//        }
 
 
         //sendMesaage(socket);
         //sendSensorMesaage(socket);
         //sendXundaMesaage(socket);
         //sendDisenElevatorMesaage(socket);
+        //sendDisenElevatorFormalMesaage(socket);
         //sendDisenEscalatorMesaage(socket);
+        //sendDisenElevatorMulFormalMesaage(socket);
+        sendDisenElevatorErrorMesaage2(socket);
+        //sendAlternatorMesaage(socket);
     }
 
     public void sendDisenElevatorMesaage(Socket socket) throws Exception {
@@ -560,42 +576,957 @@ public class TestDeji {
         OutputStream out = socket.getOutputStream();
 
 
-        ByteBuf bBuf = Unpooled.buffer(15);
-        //Lora协议功头
+        ByteBuf bBuf = Unpooled.buffer(16);
+//        //Lora协议功头
+//        bBuf.writeByte(transToByte(0xfd));
+//        bBuf.writeByte(transToByte( 0xee));
+//
+//        //Lora协议长度
+//        //长度 = 1 + MODBUS总长度
+//        //9+1 + 2
+//        bBuf.writeByte(transToByte( 0x0a));
+//
+//        //Lora协议命令域
+//        bBuf.writeByte(transToByte( 0x44));
+//        bBuf.writeByte(transToByte( 0x7f));
+//
+//        //Lora协议从机地址
+//        bBuf.writeByte(transToByte( 0x29));
+//        bBuf.writeByte(transToByte( 0x27));
+//
+//        //modbus从机地址
+//        bBuf.writeByte(transToByte( 0x01));
+//        // modbus功能码
+//        bBuf.writeByte(transToByte( 0x03));
+//
+//        // 长度
+//        bBuf.writeByte(transToByte( 0x02));
+//
+//        //内容
+//        bBuf.writeByte(transToByte( 0x0e));
+//        bBuf.writeByte(transToByte( 0x00));
+//
+//        //CRC校验码
+//        bBuf.writeByte(transToByte( 0xbc));
+//        bBuf.writeByte(transToByte( 0x24));
+//        //异或和
+//        bBuf.writeByte(transToByte( 0x48));
+//        bBuf.writeByte(transToByte( 0xE1));
+
+//        fdee0a447f2d27
+// 010302
+// 1f00
+// b074
+// 55b5
+//        fdee0a447f2d27
+// 010302
+// 0d00bcd45806
+
+        byte[] bArrary = new byte[] {
+                (byte) 0xfd,(byte) 0xee,
+                //Lora协议长度
+                //长度 = 2 + MODBUS总长度
+                //9+1 + 2
+                (byte) 0x0a,
+                //Lora协议命令域
+                (byte) 0x44,(byte) 0x7f,
+                //Lora协议从机地址
+                (byte) 0x2d,(byte) 0x27,
+                //modbus从机地址
+                (byte) 0x01,
+                // modbus功能码
+                (byte) 0x03,
+                // 长度
+                (byte) 0x02,
+                //内容
+                (byte) 0x0d,(byte) 0x00,
+                //CRC校验码
+                (byte) 0xbc,(byte) 0xd4,
+                //异或和
+                (byte) 0x58,
+                (byte) 0x06
+        };
+
+        bBuf.writeBytes(bArrary);
+        out.write(bBuf.array());
+    }
+
+    public void sendDisenElevatorFormalMesaage(Socket socket) throws Exception {
+        OutputStream out = socket.getOutputStream();
+
+        ByteBuf bBuf = Unpooled.buffer(38);
         bBuf.writeByte(transToByte(0xfd));
         bBuf.writeByte(transToByte( 0xee));
 
-        //Lora协议长度
-        //长度 = 1 + MODBUS总长度
-        //9+1 + 2
-        bBuf.writeByte(transToByte( 0x08));
+        bBuf.writeByte(transToByte( 0x20));
 
-        //Lora协议命令域
         bBuf.writeByte(transToByte( 0x44));
-        bBuf.writeByte(transToByte( 0x5f));
+        bBuf.writeByte(transToByte( 0x7f));
 
-        //Lora协议从机地址
-        bBuf.writeByte(transToByte( 0x02));
+        bBuf.writeByte(transToByte( 0x16));
+        bBuf.writeByte(transToByte( 0x27));
+
+        bBuf.writeByte(transToByte( 0x01));
+        bBuf.writeByte(transToByte( 0x03));
+        bBuf.writeByte(transToByte( 0x18));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x34));
+        bBuf.writeByte(transToByte( 0x00));
         bBuf.writeByte(transToByte( 0x00));
 
-        //modbus从机地址
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+
+        bBuf.writeByte(transToByte( 0x00));
         bBuf.writeByte(transToByte( 0x02));
-        // modbus功能码
-        bBuf.writeByte(transToByte( 0x03));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x02));
+        bBuf.writeByte(transToByte( 0x29));
+        bBuf.writeByte(transToByte( 0x13));
 
-        // 长度
-        bBuf.writeByte(transToByte( 0x03));
-
-        //内容
-        bBuf.writeByte(transToByte( 0x01));
-        bBuf.writeByte(transToByte( 0x01));
-
-        //CRC校验码
-        bBuf.writeByte(transToByte( 0x45));
-        bBuf.writeByte(transToByte( 0xCF));
-        //异或和
-        bBuf.writeByte(transToByte( 0xe0));
+        bBuf.writeByte(transToByte( 0x56));
+        bBuf.writeByte(transToByte( 0x68));
 
         out.write(bBuf.array());
+    }
+
+    public void sendDisenElevatorMulFormalMesaage(Socket socket) throws Exception {
+        OutputStream out = socket.getOutputStream();
+
+        ByteBuf bBuf = Unpooled.buffer(228);
+        //1
+        bBuf.writeByte(transToByte(0xfd));
+        bBuf.writeByte(transToByte( 0xee));
+
+        bBuf.writeByte(transToByte( 0x20));
+
+        bBuf.writeByte(transToByte( 0x44));
+        bBuf.writeByte(transToByte( 0x7f));
+
+        bBuf.writeByte(transToByte( 0x14));
+        bBuf.writeByte(transToByte( 0x27));
+
+        bBuf.writeByte(transToByte( 0x01));
+        bBuf.writeByte(transToByte( 0x03));
+        bBuf.writeByte(transToByte( 0x18));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x38));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x02));
+        bBuf.writeByte(transToByte( 0xdd));
+        bBuf.writeByte(transToByte( 0x86));
+
+        bBuf.writeByte(transToByte( 0x63));
+        bBuf.writeByte(transToByte( 0x30));
+
+        //2
+        bBuf.writeByte(transToByte(0xfd));
+        bBuf.writeByte(transToByte( 0xee));
+
+        bBuf.writeByte(transToByte( 0x20));
+
+        bBuf.writeByte(transToByte( 0x44));
+        bBuf.writeByte(transToByte( 0x7f));
+
+        bBuf.writeByte(transToByte( 0x17));
+        bBuf.writeByte(transToByte( 0x27));
+
+        bBuf.writeByte(transToByte( 0x01));
+        bBuf.writeByte(transToByte( 0x03));
+        bBuf.writeByte(transToByte( 0x18));
+        bBuf.writeByte(transToByte( 0x42));
+        bBuf.writeByte(transToByte( 0x34));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x01));
+        bBuf.writeByte(transToByte( 0x43));
+        bBuf.writeByte(transToByte( 0x6f));
+
+        bBuf.writeByte(transToByte( 0x54));
+        bBuf.writeByte(transToByte( 0x3e));
+
+        //3
+        bBuf.writeByte(transToByte(0xfd));
+        bBuf.writeByte(transToByte( 0xee));
+
+        bBuf.writeByte(transToByte( 0x20));
+
+        bBuf.writeByte(transToByte( 0x44));
+        bBuf.writeByte(transToByte( 0x7f));
+
+        bBuf.writeByte(transToByte( 0x16));
+        bBuf.writeByte(transToByte( 0x27));
+
+        bBuf.writeByte(transToByte( 0x01));
+        bBuf.writeByte(transToByte( 0x03));
+        bBuf.writeByte(transToByte( 0x18));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x31));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x01));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x02));
+        bBuf.writeByte(transToByte( 0x26));
+        bBuf.writeByte(transToByte( 0x7c));
+
+        bBuf.writeByte(transToByte( 0x54));
+        bBuf.writeByte(transToByte( 0x0c));
+
+        //4
+        bBuf.writeByte(transToByte(0xfd));
+        bBuf.writeByte(transToByte( 0xee));
+
+        bBuf.writeByte(transToByte( 0x20));
+
+        bBuf.writeByte(transToByte( 0x44));
+        bBuf.writeByte(transToByte( 0x7f));
+
+        bBuf.writeByte(transToByte( 0x18));
+        bBuf.writeByte(transToByte( 0x27));
+
+        bBuf.writeByte(transToByte( 0x01));
+        bBuf.writeByte(transToByte( 0x03));
+        bBuf.writeByte(transToByte( 0x18));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x31));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x02));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x01));
+        bBuf.writeByte(transToByte( 0x1d));
+        bBuf.writeByte(transToByte( 0xc0));
+
+        bBuf.writeByte(transToByte( 0x4f));
+        bBuf.writeByte(transToByte( 0xdc));
+
+        //5
+        bBuf.writeByte(transToByte(0xfd));
+        bBuf.writeByte(transToByte( 0xee));
+
+        bBuf.writeByte(transToByte( 0x20));
+
+        bBuf.writeByte(transToByte( 0x44));
+        bBuf.writeByte(transToByte( 0x7f));
+
+        bBuf.writeByte(transToByte( 0x14));
+        bBuf.writeByte(transToByte( 0x27));
+
+        bBuf.writeByte(transToByte( 0x01));
+        bBuf.writeByte(transToByte( 0x03));
+        bBuf.writeByte(transToByte( 0x18));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x38));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x02));
+        bBuf.writeByte(transToByte( 0xdd));
+        bBuf.writeByte(transToByte( 0x86));
+
+        bBuf.writeByte(transToByte( 0x5d));
+        bBuf.writeByte(transToByte( 0x0e));
+
+        //6
+        bBuf.writeByte(transToByte(0xfd));
+        bBuf.writeByte(transToByte( 0xee));
+
+        bBuf.writeByte(transToByte( 0x20));
+
+        bBuf.writeByte(transToByte( 0x44));
+        bBuf.writeByte(transToByte( 0x7f));
+
+        bBuf.writeByte(transToByte( 0x17));
+        bBuf.writeByte(transToByte( 0x27));
+
+        bBuf.writeByte(transToByte( 0x01));
+        bBuf.writeByte(transToByte( 0x03));
+        bBuf.writeByte(transToByte( 0x18));
+        bBuf.writeByte(transToByte( 0x42));
+        bBuf.writeByte(transToByte( 0x33));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+
+
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x00));
+        bBuf.writeByte(transToByte( 0x01));
+        bBuf.writeByte(transToByte( 0x25));
+        bBuf.writeByte(transToByte( 0x79));
+
+        bBuf.writeByte(transToByte( 0x53));
+        bBuf.writeByte(transToByte( 0x4e));
+
+        out.write(bBuf.array());
+    }
+
+    public void sendDisenElevatorErrorMesaage(Socket socket) throws Exception {
+//        OutputStream out = socket.getOutputStream();
+//
+//        ByteBuf bBuf = Unpooled.buffer(38);
+//        //1
+//        byte[] bArrary = new byte[] {
+//                (byte) 0xfd,(byte) 0xee,(byte) 0x20,
+//                (byte) 0x44,(byte) 0x7f,
+//                (byte) 0x15,(byte) 0x27,
+//                (byte) 0x01,(byte) 0x03,(byte) 0x18,
+//                (byte) 0x00,(byte) 0x33,
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,
+//                (byte) 0x00,(byte) 0x02,(byte) 0x00,(byte) 0x02,
+//                (byte) 0x4f,(byte) 0x05,(byte) 0x5d,(byte) 0x17
+//        };
+//        bBuf.writeBytes(bArrary);
+//        out.write(bBuf.array());
+//
+//        Thread.sleep(1500);
+//        bBuf = Unpooled.buffer(38);
+//        //2
+//        bArrary = new byte[] {
+//                (byte) 0xfd,(byte) 0xee,(byte) 0x20,
+//                (byte) 0x44,(byte) 0x7f,
+//                (byte) 0x15,(byte) 0x27,
+//                (byte) 0x01,(byte) 0x03,(byte) 0x18,
+//                (byte) 0x00,(byte) 0x33,
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,
+//                (byte) 0x00,(byte) 0x02,(byte) 0x00,(byte) 0x02,
+//                (byte) 0x4f,(byte) 0x05,(byte) 0x5d,(byte) 0x17
+//        };
+//
+//        bBuf.writeBytes(bArrary);
+//        out.write(bBuf.array());
+//
+//        Thread.sleep(1500);
+//        bBuf = Unpooled.buffer(38);
+//        //3
+//        bArrary = new byte[] {
+//                (byte) 0xfd,(byte) 0xee,(byte) 0x20,
+//                (byte) 0x44,(byte) 0x7f,
+//                (byte) 0x15,(byte) 0x27,
+//                (byte) 0x01,(byte) 0x03,(byte) 0x18,
+//                (byte) 0x00,(byte) 0x33,
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,
+//                (byte) 0x00,(byte) 0x02,(byte) 0x00,(byte) 0x02,
+//                (byte) 0x4f,(byte) 0x05,(byte) 0x5d,(byte) 0x17
+//        };
+//        bBuf.writeBytes(bArrary);
+//        out.write(bBuf.array());
+//
+//        Thread.sleep(1500);
+//        bBuf = Unpooled.buffer(38);
+//        //4
+//        bArrary = new byte[] {
+//                (byte) 0xfd,(byte) 0xee,(byte) 0x20,
+//                (byte) 0x44,(byte) 0x7f,
+//                (byte) 0x15,(byte) 0x27,
+//                (byte) 0x01,(byte) 0x03,(byte) 0x18,
+//                (byte) 0x00,(byte) 0x33,
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,
+//                (byte) 0x00,(byte) 0x02,(byte) 0x00,(byte) 0x02,
+//                (byte) 0x4f,(byte) 0x05,(byte) 0x5d,(byte) 0x17
+//        };
+//        bBuf.writeBytes(bArrary);
+//
+//        out.write(bBuf.array());
+
+//        OutputStream out = socket.getOutputStream();
+//
+//        ExecutorService executor = Executors.newFixedThreadPool(5);
+//
+//        for(int i=0;i<10;i++) {
+//            executor.execute(() -> {
+//                ByteBuf bBuf = Unpooled.buffer(38);
+//                //1
+//                byte[] bArrary = new byte[] {
+//                        (byte) 0xfd,(byte) 0xee,(byte) 0x20,
+//                        (byte) 0x44,(byte) 0x7f,
+//                        (byte) 0x15,(byte) 0x27,
+//                        (byte) 0x01,(byte) 0x03,(byte) 0x18,
+//                        (byte) 0x00,(byte) 0x33,
+//                        (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,
+//                        (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,
+//                        (byte) 0x00,(byte) 0x02,(byte) 0x00,(byte) 0x02,
+//                        (byte) 0x4f,(byte) 0x05,(byte) 0x5d,(byte) 0x17
+//                };
+//                bBuf.writeBytes(bArrary);
+//                try {
+//                    out.write(bBuf.array());
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            });
+//        }
+
+        OutputStream out = socket.getOutputStream();
+//        fdee20447f17270103180037000000000000000000000000000000000000000000
+// 019c3752fdee
+
+//        ByteBuf bBuf = Unpooled.buffer(41);
+//        //1
+//        byte[] bArrary = new byte[] {
+//                (byte) 0xfd,(byte) 0xee,(byte) 0x20,
+//                (byte) 0x44,(byte) 0x7f,
+//                (byte) 0x17,(byte) 0x27,
+//                (byte) 0x01,(byte) 0x03,(byte) 0x18,
+//                (byte) 0x00,(byte) 0x37,
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00, //9
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00, //18
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x01,
+//                (byte) 0x9c,(byte) 0x37,(byte) 0x52,(byte) 0xfd
+//        };
+//        bBuf.writeBytes(bArrary);
+//
+//        //3
+//        bArrary = new byte[] {
+//                (byte) 0xdd,(byte) 0xee,(byte) 0x20
+//        };
+//        bBuf.writeBytes(bArrary);
+//        out.write(bBuf.array());
+
+        //000000000000010002148f6a
+        // fdedfdee20447f1b270103180000000000000000000000000000000000000000000000006cf45df8
+        // fdee20447f1c27010318003500000000000000000000000000000000000000010002148f69fdee
+        ByteBuf bBuf = Unpooled.buffer(48);
+        //1
+        byte[] bArrary = new byte[] {
+                (byte) 0x00,(byte) 0x00,(byte) 0x00,
+                (byte) 0x00,(byte) 0x00,
+                (byte) 0x2,(byte) 0x27,
+                (byte) 0x01,(byte) 0x03,(byte) 0x18,
+
+                (byte) 0xfd,(byte) 0xee,(byte) 0x20,
+                (byte) 0x44,(byte) 0x7f,
+                (byte) 0x17,(byte) 0x27,
+                (byte) 0x01,(byte) 0x03,(byte) 0x18,
+                (byte) 0x00,(byte) 0x37,
+                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00, //9
+                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00, //18
+                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x01,
+                (byte) 0x9c,(byte) 0x37,(byte) 0x52,(byte) 0xfd
+        };
+        bBuf.writeBytes(bArrary);
+        out.write(bBuf.array());
+        //Thread.sleep(500);
+
+//        bBuf = Unpooled.buffer(48);
+//        bArrary = new byte[] {
+//                (byte) 0xfd,(byte) 0xee,(byte) 0x20,
+//                (byte) 0x44,(byte) 0x7f,
+//                (byte) 0x17,(byte) 0x27,
+//                (byte) 0x01,(byte) 0x03,(byte) 0x18,
+//                (byte) 0x00,(byte) 0x37,
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00, //9
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00, //18
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x01,
+//                (byte) 0x9c,(byte) 0x37,(byte) 0x52,(byte) 0xfd
+//        };
+//        bBuf.writeBytes(bArrary);
+//        out.write(bBuf.array());
+//        Thread.sleep(500);
+//
+//        bBuf = Unpooled.buffer(48);
+//        bArrary = new byte[] {
+//                (byte) 0xfd,(byte) 0xee,(byte) 0x20,
+//                (byte) 0x44,(byte) 0x7f,
+//                (byte) 0x17,(byte) 0x27,
+//                (byte) 0x01,(byte) 0x03,(byte) 0x18,
+//                (byte) 0x00,(byte) 0x37,
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00, //9
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00, //18
+//                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x01,
+//                (byte) 0x9c,(byte) 0x37,(byte) 0x52,(byte) 0xfd
+//        };
+//        bBuf.writeBytes(bArrary);
+//        out.write(bBuf.array());
+
+        for(int i = 0;i<20;i++) {
+            bBuf = Unpooled.buffer(48);
+            bArrary = new byte[] {
+                    (byte) 0xfd,(byte) 0xee,(byte) 0x20,
+                    (byte) 0x44,(byte) 0x7f,
+                    (byte) 0x17,(byte) 0x27,
+                    (byte) 0x01,(byte) 0x03,(byte) 0x18,
+                    (byte) 0x00,(byte) 0x37,
+                    (byte) 0x00,(byte) i,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00, //9
+                    (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00, //18
+                    (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x01,
+                    (byte) 0x9c,(byte) 0x37,(byte) 0x52,(byte) 0xfd
+            };
+            bBuf.writeBytes(bArrary);
+            out.write(bBuf.array());
+            Thread.sleep(100);
+        }
+
+        while(true) {
+
+        }
+    }
+
+    public void sendAlternatorMesaage(Socket socket) throws Exception {
+
+        OutputStream out = socket.getOutputStream();
+
+        ByteBuf bBuf = Unpooled.buffer(51);
+
+        byte[] bArrary = new byte[] {
+                (byte) 0xfd,(byte) 0xee,
+                //Lora协议长度
+                //长度 = 2 + MODBUS总长度
+                //9+1 + 2
+                (byte) 0x2d,
+                //Lora协议命令域
+                (byte) 0x44,(byte) 0x7f,
+                //Lora协议从机地址
+                (byte) 0x1a,(byte) 0x27,
+                //modbus从机地址
+                (byte) 0x01,
+                // modbus功能码
+                (byte) 0x03,
+                // 长度
+                (byte) 0x1c,
+                //内容
+                (byte) 0x00,(byte) 0x01,(byte) 0x00,(byte) 0x02,(byte) 0x00,(byte) 0x03,(byte) 0x00,(byte) 0x04,(byte) 0x00,(byte) 0x05, //10
+                (byte) 0x00,(byte) 0x06,(byte) 0x00,(byte) 0x07,(byte) 0x00,(byte) 0x08,(byte) 0x00,(byte) 0x09,(byte) 0x00,(byte) 0x0a,//20
+                (byte) 0x00,(byte) 0x0b,(byte) 0x00,(byte) 0x0c,(byte) 0x00,(byte) 0x0d,(byte) 0x00,(byte) 0x0e,(byte) 0x00,(byte) 0x0f,//30
+                (byte) 0x00,(byte) 0x10,(byte) 0x00,(byte) 0x11,(byte) 0x00,(byte) 0x12,(byte) 0x00,(byte) 0x13,
+                //CRC校验码
+                (byte) 0x37,(byte) 0x52,
+                //异或和
+                (byte) 0xfd
+        };
+
+        bBuf.writeBytes(bArrary);
+        out.write(bBuf.array());
+
+
+        bBuf = Unpooled.buffer(25);
+
+        bArrary = new byte[] {
+                (byte) 0xfd,(byte) 0xee,
+                //Lora协议长度
+                //长度 = 2 + MODBUS总长度
+                //9+1 + 2
+                (byte) 0x13,
+                //Lora协议命令域
+                (byte) 0x44,(byte) 0x7f,
+                //Lora协议从机地址
+                (byte) 0x1a,(byte) 0x27,
+                //modbus从机地址
+                (byte) 0x01,
+                // modbus功能码
+                (byte) 0x03,
+                // 长度
+                (byte) 0x1c,
+                //内容
+                (byte) 0x00,(byte) 0x01,(byte) 0x00,(byte) 0x02,(byte) 0x00,(byte) 0x03,(byte) 0x00,(byte) 0x04,(byte) 0x00,(byte) 0x05, //10
+                (byte) 0x00,(byte) 0x06,
+                //CRC校验码
+                (byte) 0x37,(byte) 0x52,
+                //异或和
+                (byte) 0xfd
+        };
+
+        bBuf.writeBytes(bArrary);
+        out.write(bBuf.array());
+
+        bBuf = Unpooled.buffer(15);
+
+        bArrary = new byte[] {
+                (byte) 0xfd,(byte) 0xee,
+                //Lora协议长度
+                //长度 = 2 + MODBUS总长度
+                //9+1 + 2
+                (byte) 0x09,
+                //Lora协议命令域
+                (byte) 0x44,(byte) 0x7f,
+                //Lora协议从机地址
+                (byte) 0x1a,(byte) 0x27,
+                //modbus从机地址
+                (byte) 0x01,
+                // modbus功能码
+                (byte) 0x03,
+                // 长度
+                (byte) 0x1c,
+                //内容
+                (byte) 0x00,(byte) 0x01,
+                //CRC校验码
+                (byte) 0x37,(byte) 0x52,
+                //异或和
+                (byte) 0xfd
+        };
+
+        bBuf.writeBytes(bArrary);
+        out.write(bBuf.array());
+    }
+
+
+    @Test
+    public void testHeartbeat() throws Exception {
+
+        //socket = new Socket("127.0.0.1",8082);
+
+        testElevator();
+        OutputStream out = socket.getOutputStream();
+        ByteBuf buf = Unpooled.buffer(1);
+
+        buf.writeByte(0xfe);
+        out.write(buf.array());
+        try {
+            getElevatorRsponse(socket);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testByteToInt() {
+        byte b = 0x0e;
+        for(int i=0;i<8;i++) {
+            System.out.println((b>>i)&0x01);
+        }
+    }
+
+    @Test
+    public void testPrintByte() {
+        byte[] bArrary = new byte[] {
+                (byte) 0xfd,(byte) 0xee,
+                //Lora协议长度
+                //长度 = 2 + MODBUS总长度
+                //9+1 + 2
+                (byte) 0x20,
+                //Lora协议命令域
+                (byte) 0x44,(byte) 0x7f,
+                //Lora协议从机地址
+                (byte) 0x1b,(byte) 0x27,
+                //modbus从机地址
+                (byte) 0x01,
+                // modbus功能码
+                (byte) 0x03,
+                // 长度
+                (byte) 0x18,
+                //内容
+                (byte) 0x00,(byte) 0x01,(byte) 0x00,(byte) 0x02,(byte) 0x00,(byte) 0x03,(byte) 0x00,(byte) 0x04,(byte) 0x00,(byte) 0x05, //10
+                (byte) 0x00,(byte) 0x06,(byte) 0x00,(byte) 0x07,(byte) 0x00,(byte) 0x08,(byte) 0x00,(byte) 0x09,(byte) 0x00,(byte) 0x0a,//20
+                (byte) 0x00,(byte) 0x0b,(byte) 0x00,(byte) 0x0c,
+                //CRC校验码
+                (byte) 0x6c,(byte) 0xf4,
+                //异或和
+                (byte) 0x5b
+        };
+        System.out.println(bArrary.length);
+
+        StringBuffer strBuf = new StringBuffer();
+        for(int i=0;i<bArrary.length;i++) {
+            int num = bArrary[i] & 0xff;
+            if(num<16) {
+                strBuf.append("0" + Integer.toHexString(num));
+            }else {
+                strBuf.append(Integer.toHexString(num));
+            }
+        }
+        System.out.println(strBuf.toString());
+    }
+
+    public void sendDisenElevatorErrorMesaage2(Socket socket) throws Exception {
+//        Socket socket = new Socket("127.0.0.1",8082);
+        OutputStream out = socket.getOutputStream();
+        ByteBuf bBuf = Unpooled.buffer(37);
+        //1
+
+        //fdee20447f
+        // 1b27010318
+        // 0000000000000000000000000000000000000000000000006cf45b
+        byte[] bArrary = new byte[] {
+                (byte) 0xfd,(byte) 0xee,
+                //Lora协议长度
+                //长度 = 2 + MODBUS总长度
+                //9+1 + 2
+                (byte) 0x20,
+                //Lora协议命令域
+                (byte) 0x44,(byte) 0x7f,
+                //Lora协议从机地址
+                (byte) 0x14,(byte) 0x27,
+                //modbus从机地址
+                (byte) 0x01,
+                // modbus功能码
+                (byte) 0x03,
+                // 长度
+                (byte) 0x18,
+                //内容
+                (byte) 0x00,(byte) 0x01,(byte) 0x00,(byte) 0x02,(byte) 0x00,(byte) 0x03,(byte) 0x00,(byte) 0x04,(byte) 0x00,(byte) 0x05, //10
+                (byte) 0x00,(byte) 0x06,(byte) 0x00,(byte) 0x07,(byte) 0x00,(byte) 0x08,(byte) 0x00,(byte) 0x09,(byte) 0x00,(byte) 0x0a,//20
+                (byte) 0x00,(byte) 0x0b,(byte) 0x00,(byte) 0x0c,
+                //CRC校验码
+                (byte) 0x6c,(byte) 0xf4,
+                //异或和
+                (byte) 0x5b,
+                //2
+                // fdeefdee20447f1c2701031800350000000000
+                (byte) 0xfd,(byte) 0xee,
+                (byte) 0xfd,(byte) 0xee,
+                //Lora协议长度
+                //长度 = 2 + MODBUS总长度
+                //9+1 + 2
+                (byte) 0x20,
+                //Lora协议命令域
+                (byte) 0x44,(byte) 0x7f,
+                //Lora协议从机地址
+                (byte) 0x14,(byte) 0x27,
+                //modbus从机地址
+                (byte) 0x01,
+                // modbus功能码
+                (byte) 0x03,
+                // 长度
+                (byte) 0x18,
+                //内容
+                (byte) 0x00,(byte) 0x01,(byte) 0x00,(byte) 0x02,(byte) 0x00,(byte) 0x03,(byte) 0x00,(byte) 0x04,(byte) 0x00,(byte) 0x05, //10
+                (byte) 0x00,(byte) 0x06,(byte) 0x00,(byte) 0x07
+        };
+        bBuf.writeBytes(bArrary);
+        out.write(bBuf.array());
+        Thread.sleep(2000);
+        //010318003500000000000000000000000000000000000000010002148f6afded
+        bBuf = Unpooled.buffer(32);
+        bArrary = new byte[] {
+                (byte) 0x01,(byte) 0x03,(byte) 0x18,
+                (byte) 0x00,(byte) 0x37,
+                (byte) 0x00,(byte) 0x04,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00, //9
+                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00, //18
+                (byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x01,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00,(byte) 0x00, //27
+                (byte) 0x9c,(byte) 0x37
+        };
+
+        bBuf.writeBytes(bArrary);
+        out.write(bBuf.array());
+        Thread.sleep(1000);
+
+        for(int i=0;i<100;i++) {
+            bBuf = Unpooled.buffer(32);
+            bArrary = new byte[] {
+                    (byte) 0xfd,(byte) 0xee,
+                    //Lora协议长度
+                    //长度 = 2 + MODBUS总长度
+                    //9+1 + 2
+                    (byte) 0x20,
+                    //Lora协议命令域
+                    (byte) 0x44,(byte) 0x7f,
+                    //Lora协议从机地址
+                    (byte) 0x14,(byte) 0x27,
+                    //modbus从机地址
+                    (byte) 0x01,
+                    // modbus功能码
+                    (byte) 0x03,
+                    // 长度
+                    (byte) 0x18,
+                    //内容
+                    (byte) 0x00,(byte) 0x01,(byte) 0x00,(byte) 0x02,(byte) 0x00,(byte) 0x03,(byte) 0x00,(byte) 0x04,(byte) 0x00,(byte) 0x05, //10
+                    (byte) 0x00,(byte) 0x06,(byte) 0x00,(byte) 0x07,(byte) 0x00,(byte) 0x08,(byte) 0x00,(byte) 0x09,(byte) 0x00,(byte) 0x0a,//20
+                    (byte) 0x00,(byte) 0x0b,(byte) 0x00,(byte) 0x0c,
+                    //CRC校验码
+                    (byte) 0x6c,(byte) 0xf4,
+                    //异或和
+                    (byte) 0x5b,
+            };
+            bBuf.writeBytes(bArrary);
+            out.write(bBuf.array());
+
+            Thread.sleep(1000);
+        }
+
+//        while(true) {
+//
+//        }
     }
 }

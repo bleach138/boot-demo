@@ -4,16 +4,20 @@ import com.fnic.service.MQService;
 import com.google.common.collect.Maps;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
+import org.springframework.web.context.request.async.DeferredResult;
 
 import javax.annotation.Resource;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentMap;
 
 @Service
 public class MQServiceImpl implements MQService {
@@ -21,11 +25,15 @@ public class MQServiceImpl implements MQService {
     @Resource
     private KafkaTemplate kafkaTemplate;
 
+    private ConcurrentMap<String,Object> reqesutMap = Maps.newConcurrentMap();
+
     @Override
-    public Map<String, Object> miaoshaMQ(final Map<String, Object> param) throws Exception {
+    public Map<String, Object> miaoshaMQ(final Map<String, Object> param, DeferredResult<ResponseEntity> deferredResult) throws Exception {
 
         final Map<String,Object> rspMap = Maps.newHashMap();
 
+
+        reqesutMap.putIfAbsent(String.valueOf(param.get("ts")),deferredResult);
         ListenableFuture<SendResult<String, Object>> future = kafkaTemplate.send(new ProducerRecord("miaosha",param));
 
 
@@ -66,6 +74,9 @@ public class MQServiceImpl implements MQService {
         if (kafkaMessage.isPresent()) {
             Map<String,Object> message = (Map<String,Object>) kafkaMessage.get();
             System.out.println("miaoshaResponseListen: " + message);
+            String ts = String.valueOf(message.get("ts")) ;
+            DeferredResult<ResponseEntity> deferredResult =(DeferredResult<ResponseEntity>) reqesutMap.get(ts);
+            deferredResult.setResult(new ResponseEntity(message, HttpStatus.OK));
         }
     }
 }

@@ -2,6 +2,7 @@ package com.fnic.sysframe.config;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -20,6 +21,9 @@ import java.util.Map;
 @EnableKafka
 public class KafkaConsumerConfig {
 
+    @Value("${kafka.host}")
+    private String host;
+
     @Bean
     public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, Object>> kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
@@ -36,7 +40,7 @@ public class KafkaConsumerConfig {
 
     public Map<String, Object> consumerConfigs() {
         Map<String, Object> propsMap = new HashMap<>();
-        propsMap.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.33.167:9092");
+        propsMap.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, host);
         propsMap.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         propsMap.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "100");
         propsMap.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "15000");

@@ -28,4 +28,5 @@ public class TestString {
             System.out.println(incre & length);
         }
     }
+
 }
